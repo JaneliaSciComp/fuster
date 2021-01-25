@@ -38,6 +38,10 @@ classdef bqueue_type < handle
         end
         
         function job_statuses = run(self, maximum_wait_time, do_show_progress_bar)
+            % Possible job_statuses are {-1,0,+1}.
+            %   -1 means errored out
+            %    0 mean running or pending
+            %   +1 means completed successfully            
             if ~exist('maximum_wait_time', 'var') || isempty(maximum_wait_time) ,
                 maximum_wait_time = inf ;
             end
@@ -69,7 +73,7 @@ classdef bqueue_type < handle
                         job_indices_to_submit = submittable_job_indices ;
                     end
                     jobs_to_submit_count = length(job_indices_to_submit) ;
-                    this_options = sprintf('-n %d -oo /dev/null -eo /dev/null %s', self.slots_per_job, self.bsub_options) ;
+                    this_options = sprintf('-n %d %s', self.slots_per_job, self.bsub_options) ;
                     for i = 1 : jobs_to_submit_count ,
                         job_index = job_indices_to_submit(i) ;
                         this_function_handle = self.function_handle{job_index} ;

@@ -8,6 +8,7 @@ function job_id = bsub(do_actually_submit, options, function_handle, varargin)
         bash_command = sprintf('matlab -batch "%s"', matlab_command) ;
         bsub_command = ...
             sprintf('bsub -eo /dev/null -oo /dev/null %s %s', options, bash_command) ;
+        %fprintf('%s\n', bsub_command) ;
         [status, raw_stdout] = system(bsub_command) ;
         if status ~= 0 ,
             error('There was a problem submitting the bsub command %s.  The return code was %d', bsub_command, status) ;
