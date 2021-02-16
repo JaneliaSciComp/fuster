@@ -81,7 +81,7 @@ classdef bqueue_type < handle
                         this_job_id = bsub(self.do_actually_submit, this_options, this_function_handle, this_other_arguments{:}) ;
                         self.job_ids(job_index) = this_job_id ;
                         self.has_job_been_submitted(job_index) = true ;
-                        is_job_in_progress(job_index) = true ;
+                        is_job_in_progress(job_index) = self.do_actually_submit ;
                     end
                 end                                
                 has_job_exited = self.has_job_been_submitted & ~is_job_in_progress ;
