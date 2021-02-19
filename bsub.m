@@ -1,13 +1,19 @@
-function job_id = bsub(do_actually_submit, options, function_handle, varargin)
+function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, options, function_handle, varargin)
     % Wrapper for LSF bsub command.  Returns job id as a double.
     % Throws error if anything goes wrong.
+    if isempty(slot_count) ,
+        slot_count = 1 ;
+    end    
+    if isempty(stdouterr_file_name) ,
+        stdouterr_file_name = '/dev/null' ;
+    end    
     if do_actually_submit ,
         function_name = func2str(function_handle) ;
         arg_string = generate_arg_string(varargin{:}) ;
         matlab_command = sprintf('modpath; %s(%s);', function_name, arg_string) ;
         bash_command = sprintf('matlab -batch "%s"', matlab_command) ;
         bsub_command = ...
-            sprintf('bsub -eo /dev/null -oo /dev/null %s %s', options, bash_command) ;
+            sprintf('bsub -n %d -eo %s -oo %s %s %s', slot_count, stdouterr_file_name, stdouterr_file_name, options, bash_command) ;
         %fprintf('%s\n', bsub_command) ;
         [status, raw_stdout] = system(bsub_command) ;
         if status ~= 0 ,
