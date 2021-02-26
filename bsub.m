@@ -15,10 +15,7 @@ function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, opti
         bsub_command = ...
             sprintf('bsub -n %d -eo %s -oo %s %s %s', slot_count, stdouterr_file_name, stdouterr_file_name, options, bash_command) ;
         %fprintf('%s\n', bsub_command) ;
-        [status, raw_stdout] = system(bsub_command) ;
-        if status ~= 0 ,
-            error('There was a problem submitting the bsub command %s.  The return code was %d', bsub_command, status) ;
-        end
+        raw_stdout = system_with_error_handling(bsub_command) ;
         stdout = strtrim(raw_stdout) ;  % There are leading newlines and other nonsense in the raw version
         raw_tokens = strsplit(stdout) ;
         is_token_nonempty = cellfun(@(str)(~isempty(str)), raw_tokens) ;
