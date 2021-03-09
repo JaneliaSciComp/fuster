@@ -76,6 +76,27 @@ function result = tostring(thing)
             end            
         end
         result = horzcat(result, ')') ;
+    elseif iscell(thing) && (isempty(thing) || isvector(thing)) ,
+        if isempty(thing) ,
+            result = sprintf('cell(%d,%d)', size(thing,1), size(thing,2)) ;
+        else
+            if iscolumn(thing) ,
+                separator = ';' ;
+            else
+                separator = ',' ;
+            end            
+            result = '{ ' ;
+            element_count = length(thing) ;
+            for i = 1 : element_count ,
+                element_value = thing{i} ;
+                element_value_as_string = tostring(element_value) ;
+                result = horzcat(result, element_value_as_string) ; %#ok<AGROW>
+                if i<element_count ,
+                    result = horzcat(result, [separator ' ']) ; %#ok<AGROW>
+                end            
+            end
+            result = horzcat(result, ' }') ;
+        end
     else
         error('Don''t know how to convert something of class %s to string', class(thing)) ;
     end
