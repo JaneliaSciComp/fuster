@@ -7,9 +7,12 @@ function result = get_single_bsub_job_status(job_id)
     if ~isfinite(job_id) ,
         % This means the job has not been submitted yet
         result = nan ;
-    elseif job_id < 0 ,
-        % This is a job that was actually not submitted, so its status is automatically +1
+    elseif job_id == -1 ,
+        % This is a job that was run locally and exited cleanly
         result = +1 ;
+    elseif job_id == -2 ,
+        % This is a job that was run locally and errored
+        result = -1 ;
     else
         command_line = sprintf('bjobs %d', job_id) ;
         [status, stdout] = system(command_line) ;
@@ -31,7 +34,7 @@ function result = get_single_bsub_job_status(job_id)
         elseif isequal(lsf_status, 'EXIT') ,
             % This seems to indicate an exit with something other than a 0 return code
             result = -1 ;
-        elseif isequal(lsf_status, 'PEND') || isequal(lsf_status, 'RUN') || isequal(lsf_status, 'UNKWN') ,
+        elseif isequal(lsf_status, 'PEND') || isequal(lsf_status, 'RUN')  || isequal(lsf_status, 'UNKWN'),
             result = 0 ;
         else
             error('Unknown bjobs status string: %s', lsf_status) ;
