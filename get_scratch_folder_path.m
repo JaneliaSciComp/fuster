@@ -1,12 +1,9 @@
-function result = get_scratch_folder_path()
-    host_name = get_host_name() ;
-    if ispc() ,
-        result = tempdir() ;
-    elseif isequal(host_name, 'taylora-ws1') ,
-        result = tempdir() ;
-    else
-        % We assume we're on a cluster node
-        user_name = get_user_name() ;
-        result = fullfile('/scratch', user_name) ;
-    end
+function result = get_scratch_folder_path()  
+  if exist('/scratch', 'dir') ,
+    % If this folder exists, return it, since presumably we're on a cluster node
+    result = fullfile('/scratch', get_user_name()) ;
+  else
+    % Otherwise, return the usual Matlab temp folder name
+    result = tempdir() ;
+  end
 end
