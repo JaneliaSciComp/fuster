@@ -1,47 +1,33 @@
-function [result,bjobs_lines] = get_bsub_job_status(job_ids,varargin)
-    % Possible results are {-1,0,+1}.
-    %   -1 means errored out
-    %    0 mean running or pending
-    %   +1 means completed successfully
-    %   nan other 
-    
-    job_count = length(job_ids) ;
-    result = nan(size(job_ids)) ;
-    is_not_yet_submitted = isnan(job_ids) ;
-    was_run_locally = (job_ids<0) ;  % means the job was run locally
-    was_run_locally_and_exited_cleanly = (job_ids==-1) ;
-    was_run_locally_and_errored = (job_ids==-2) ;
-    result(was_run_locally_and_exited_cleanly) = +1 ;
-    result(was_run_locally_and_errored) = -1 ;
-    if all(is_not_yet_submitted | was_run_locally) ,
+function [numeric_job_status_from_job_index, lsf_status_string_from_job_index] = get_bsub_job_status(job_id_from_job_index, ssh_host_name)
+    % Get the status of each job_ids
+    % Possible results are {-1,0,+1,nan}.
+    %   -1   means errored out
+    %    0   means running or pending
+    %   +1   means completed successfully
+    %   nan  means job ID not found
+    %
+    % The seconds return value gives the raw LSF status for each job, as a
+    % string.  LSF statuses are things like 'DONE', 'EXIT', 'RUN', 'PEND', etc. 
+
+    if nargin < 2 ,
+        ssh_host_name = '' ;
+    end    
+    numeric_job_status_from_job_index = nan(size(job_id_from_job_index)) ;
+    lsf_status_string_from_job_index = repmat({''}, size(job_id_from_job_index)) ;
+    is_not_yet_submitted_from_job_index = isnan(job_id_from_job_index) ;
+    was_run_locally_from_job_index = (job_id_from_job_index<0) ;  % means the job was run locally
+    was_run_locally_and_exited_cleanly_from_job_index = (job_id_from_job_index==-1) ;
+    was_run_locally_and_errored_from_job_index = (job_id_from_job_index==-2) ;
+    numeric_job_status_from_job_index(was_run_locally_and_exited_cleanly_from_job_index) = +1 ;
+    numeric_job_status_from_job_index(was_run_locally_and_errored_from_job_index) = -1 ;
+    if all(is_not_yet_submitted_from_job_index | was_run_locally_from_job_index) ,
         return
     end
-    was_submitted = ~(was_run_locally | is_not_yet_submitted) ;
-    submitted_job_ids = job_ids(was_submitted) ;
-    bjobs_lines = get_bjobs_lines(submitted_job_ids,varargin{:}) ;
-    bjobs_line_index = 1 ;
-    for job_index = 1 : job_count ,
-        if ~was_submitted(job_index) ,
-            continue ;
-        end
-        job_id = job_ids(job_index) ;
-        lsf_status = bjobs_lines{job_index} ; % Should be string like 'DONE', 'EXIT', 'RUN', 'PEND', etc.
-        if isequal(lsf_status, 'DONE') ,
-            running_job_status_code = +1 ;
-        elseif isequal(lsf_status, 'EXIT') ,
-            % This seems to indicate an exit with something other than a 0 return code
-            running_job_status_code = -1 ;
-        elseif isequal(lsf_status, 'PEND') || isequal(lsf_status, 'RUN') || isequal(lsf_status, 'UNKWN') || ...
-               isequal(lsf_status, 'SSUSP') || isequal(lsf_status, 'PSUSP') || isequal(lsf_status, 'USUSP'),
-            running_job_status_code = 0 ;
-        else
-          if ~isempty(regexp(lsf_status,'not found','once')),
-            running_job_status_code = nan;
-          else
-            error('Unknown bjobs status string for job %d: %s', job_id,lsf_status) ;
-          end
-        end
-        result(job_index) = running_job_status_code ;
-        bjobs_line_index = bjobs_line_index + 1 ;
-    end
+    was_submitted_from_job_index = ~(was_run_locally_from_job_index | is_not_yet_submitted_from_job_index) ;
+    job_id_from_submitted_job_index = job_id_from_job_index(was_submitted_from_job_index) ;
+    line_from_bjob_line_index = get_bjobs_lines(job_id_from_submitted_job_index, ssh_host_name) ;
+    [numeric_job_status_from_submitted_job_index, lsf_status_string_from_submitted_job_index] = ...
+        collate_bjobs_lines(line_from_bjob_line_index, job_id_from_submitted_job_index) ;
+    numeric_job_status_from_job_index(was_submitted_from_job_index) = numeric_job_status_from_submitted_job_index ;
+    lsf_status_string_from_job_index(was_submitted_from_job_index) = lsf_status_string_from_submitted_job_index ;
 end
