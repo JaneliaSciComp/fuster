@@ -1,4 +1,4 @@
-function [numeric_job_status_from_job_index, lsf_status_string_from_job_index] = collate_bjobs_lines(line_from_bjob_line_index, job_id_from_job_index)
+function [numeric_job_status_from_job_index, lsf_status_string_from_job_index] = collate_bjobs_lines(line_from_bjobs_line_index, job_id_from_job_index)
     % If any of the job ids are invalid (maybe b/c they're too old), bjobs will
     % output a line like
     %
@@ -7,18 +7,18 @@ function [numeric_job_status_from_job_index, lsf_status_string_from_job_index] =
     % for that job.  But these all come at the end of the lines for all the valid
     % jobs ids.  (Actually, the good ones go to stdout, the bad to stderr, and
     % Matlab returns them in stdout-then-stderr order in the 2nd output from
-    % system().)  This function re-orders the lines so that the job_ids 
-    % match up with the bjobs lines.
-    line_count = length(line_from_bjob_line_index) ;
+    % system().)  This function re-maps the lines in the bjobs output to the job
+    % indices.
+    line_count = length(line_from_bjobs_line_index) ;
     job_count = length(job_id_from_job_index) ;
     if line_count ~= job_count ,
         error('bjobs line count(%d) is not equal to job_count (%d)', line_count, job_count) ;
     end
-    invalid_job_id_from_line_index = nan(size(line_from_bjob_line_index)) ;
-    numeric_job_status_from_line_index = nan(size(line_from_bjob_line_index)) ;
-    lsf_status_string_from_line_index = repmat({''}, size(line_from_bjob_line_index)) ;
+    invalid_job_id_from_line_index = nan(size(line_from_bjobs_line_index)) ;
+    numeric_job_status_from_line_index = nan(size(line_from_bjobs_line_index)) ;
+    lsf_status_string_from_line_index = repmat({''}, size(line_from_bjobs_line_index)) ;
     for line_index = 1 : line_count ,
-        bjobs_line = line_from_bjob_line_index{line_index} ;
+        bjobs_line = line_from_bjobs_line_index{line_index} ;
             % bjobs_line should be a string like 'DONE', 'EXIT', 'RUN', 'PEND', etc.
             % But it might also be a line like 'Job <42> is not found'.
         [numeric_job_status, lsf_status_string, job_id] = numeric_job_status_from_bjobs_line(bjobs_line) ;

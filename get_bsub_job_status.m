@@ -12,6 +12,10 @@ function [numeric_job_status_from_job_index, lsf_status_string_from_job_index] =
     if nargin < 2 ,
         ssh_host_name = '' ;
     end    
+    % We don't support repeated job ids, so check for that
+    if length(unique(job_id_from_job_index)) ~= length(job_id_from_job_index) ,
+        error('Repeated job ids not supported')
+    end
     numeric_job_status_from_job_index = nan(size(job_id_from_job_index)) ;
     lsf_status_string_from_job_index = repmat({''}, size(job_id_from_job_index)) ;
     is_not_yet_submitted_from_job_index = isnan(job_id_from_job_index) ;

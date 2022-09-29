@@ -21,9 +21,9 @@ function result = get_bjobs_lines(job_ids, ssh_host_name)
             command_line = sprintf('ssh -q %s "%s"', ssh_host_name, command_line) ;
         end
         [~, stdout] = system(command_line) ;
-        fprintf('\n\nstdout:\n') ;
-        fprintf(stdout) ;
-        fprintf('\n\n') ;
+%         fprintf('\n\nstdout:\n') ;
+%         fprintf(stdout) ;
+%         fprintf('\n\n') ;
         % [status, stdout] = system(command_line) ;
         % Ignore the return code.
         % As of this writing (2022-09-29), bsub returns a non-zero error code if
