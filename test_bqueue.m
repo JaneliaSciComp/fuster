@@ -11,7 +11,7 @@ for job_index = 1 : job_count ,
     bqueue.enqueue(slots_per_job, stdouterr_file_path, bsub_option_string, @pause, 20) ;  % the 20 is an arg to pause()
 end
 
-maximum_wait_time = 200 ;
+maximum_wait_time = 400 ;
 do_show_progress_bar = true ;
 tic_id = tic() ;
 job_statuses = bqueue.run(maximum_wait_time, do_show_progress_bar) 

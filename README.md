@@ -12,5 +12,3 @@ a Matlab library that includes a bunch of other useful stuff.
 This standalone version of Fuster is provided for projects that
 may not want to include all the the functions (and potential
 for shadowing issues) provided by TMT.
-
-
