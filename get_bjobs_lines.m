@@ -16,10 +16,12 @@ for batch_index = 1 : batch_count ,
   if ~isempty(sshhost),
     command_line = sprintf('ssh -q %s "%s"',sshhost,command_line);
   end
-  [status, stdout] = system(command_line) ;
-  if status ~= 0 ,
-    error('There was a problem running the command %s.  The return code was %d', command_line, status) ;
-  end
+  [status, stdout] = system(command_line) ; %#ok<ASGLU> 
+  % sometimes status returns non-zero, but it seems to work ok when some
+  % jobs are not found?? 
+%   if status ~= 0 ,
+%     error('There was a problem running the command %s.  The return code was %d', command_line, status) ;
+%   end
   bjobs_lines = strsplit(strtrim(stdout), '\n')' ;  % Want a col vector of lines
   if length(bjobs_lines)<1 ,
     error('There was a problem submitting the bsub command %s.  Unable to parse output.  Output was: %s', bsub_command, stdout) ;
