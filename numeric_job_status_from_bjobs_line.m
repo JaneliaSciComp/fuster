@@ -56,7 +56,6 @@ function [numeric_job_status, lsf_status_string, job_id] = numeric_job_status_fr
             if ~isfinite(job_id) || (round(job_id)~=job_id) || job_id<0 ,
                 error('Unable to parse bjobs line: "%s"', bjobs_line) ;
             end
-            job_id = job_id ;
         else
             error('Unable to parse bjobs line: "%s"', bjobs_line) ;
         end
