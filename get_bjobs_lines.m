@@ -18,7 +18,8 @@ function result = get_bjobs_lines(job_ids, ssh_host_name)
         job_ids_as_string = sprintf(' %d', job_ids_this_batch) ;
         command_line = ['bjobs -o stat -noheader' job_ids_as_string] ;
         if ~isempty(ssh_host_name),
-            command_line = sprintf('ssh -q %s "%s"', ssh_host_name, command_line) ;
+            escaped_command_line = escape_string_for_bash(command_line) ;
+            command_line = sprintf('ssh -q %s %s', ssh_host_name, escaped_command_line) ;
         end
         [~, stdout] = system(command_line) ;
 %         fprintf('\n\nstdout:\n') ;

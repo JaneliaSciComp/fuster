@@ -1,4 +1,4 @@
-function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, options, do_use_xvfb, function_handle, varargin)
+function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, options, do_use_xvfb, ssh_host_name, function_handle, varargin)
     % Wrapper for LSF bsub command.  Returns job id as a double.
     % Throws error if anything goes wrong.
     if isempty(slot_count) ,
@@ -12,8 +12,8 @@ function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, opti
     end
     if do_actually_submit ,
         function_name = func2str(function_handle) ;
-        arg_string = generate_arg_string(varargin{:}) ;
-        matlab_command = sprintf('modpath; %s(%s);', function_name, arg_string) ;
+        arg_string = generate_arg_string(varargin{:}) ;        
+        matlab_command = sprintf('cd(''%s''); modpath; %s(%s);', pwd(), function_name, arg_string) ;
         if do_use_xvfb ,
             bash_command = sprintf('/usr/bin/xvfb-run -d /misc/local/matlab-2019a/bin/matlab -batch "%s"', matlab_command) ;
                 % Matlab 2019a-2021a all seem to leak memory when you call getframe() without an
@@ -24,7 +24,13 @@ function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, opti
         bsub_command = ...
             sprintf('bsub -n %d -eo %s -oo %s %s %s', slot_count, stdouterr_file_name, stdouterr_file_name, options, bash_command) ;
         %fprintf('%s\n', bsub_command) ;
-        raw_stdout = system_with_error_handling(bsub_command) ;
+        if isempty(ssh_host_name),
+            final_command_line = bsub_command ;
+        else
+            escaped_bsub_command = escape_string_for_bash(bsub_command) ;
+            final_command_line = sprintf('ssh -q %s %s', ssh_host_name, escaped_bsub_command) ;
+        end        
+        raw_stdout = system_with_error_handling(final_command_line) ;
         stdout = strtrim(raw_stdout) ;  % There are leading newlines and other nonsense in the raw version
         raw_tokens = strsplit(stdout) ;
         is_token_nonempty = cellfun(@(str)(~isempty(str)), raw_tokens) ;
@@ -32,28 +38,28 @@ function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, opti
         is_job_token = strcmp(tokens, 'Job') ;
         job_token_index = find(is_job_token, 1) ;
         if isempty(job_token_index) ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end
         if length(tokens) < job_token_index+3 ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end
         if ~isequal(tokens{job_token_index+2}, 'is') ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end
         if ~isequal(tokens{job_token_index+3}, 'submitted') ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end
         job_id_token = tokens{job_token_index+1} ;
         if length(job_id_token)<2 ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end
         if ~isequal(job_id_token(1), '<') || ~isequal(job_id_token(end), '>') ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end        
         job_id_as_string = job_id_token(2:end-1) ;
         job_id = str2double(job_id_as_string) ;
         if ~isfinite(job_id) ,
-            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', bsub_command, stdout) ;
+            error('There was a problem submitting the bsub command %s.  Unable to parse output to get job id.  Output was: %s', final_command_line, stdout) ;
         end
     else
         % Just call the function locally, but use a try/catch to make it more robust.
