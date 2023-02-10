@@ -28,7 +28,7 @@ function job_id = bsub(do_actually_submit, slot_count, stdouterr_file_name, opti
             final_command_line = bsub_command ;
         else
             escaped_bsub_command = escape_string_for_bash(bsub_command) ;
-            final_command_line = sprintf('ssh -q %s %s', ssh_host_name, escaped_bsub_command) ;
+            final_command_line = sprintf('ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=20 -q %s %s', ssh_host_name, escaped_bsub_command) ;
         end        
         raw_stdout = system_with_error_handling(final_command_line) ;
         stdout = strtrim(raw_stdout) ;  % There are leading newlines and other nonsense in the raw version
